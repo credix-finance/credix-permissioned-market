@@ -1,0 +1,22 @@
+[package]
+description = "Created with Anchor"
+edition = "2018"
+name = "credix-permissioned-market"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "credix_permissioned_market"
+
+[features]
+cpi = ["no-entrypoint"]
+default = []
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+
+[dependencies]
+anchor-lang = "0.20.1"
+anchor-spl = {version = "0.20.1", features = ["dex", "serum_dex"]}
+serum-dex-permissioned = {path = "../../permissioned"}
+credix = { path = "../credix", features = ["cpi"] }

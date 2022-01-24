@@ -1,0 +1,10 @@
+[package]
+name = "serum-dex-permissioned"
+version = "0.5.1"
+edition = "2018"
+
+[dependencies]
+anchor-lang = "0.20.1"
+anchor-spl = { version = "0.20.1", features = ["dex"] }
+serum_dex = { version = "0.5.0", features = ["no-entrypoint"] }
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }

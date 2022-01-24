@@ -1,0 +1,26 @@
+[package]
+description = "Created with Anchor"
+edition = "2018"
+name = "credix"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "credix"
+
+[features]
+cpi = ["no-entrypoint"]
+default = ["localnet"]
+devnet = []
+localnet = []
+mainnet = []
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+
+[dependencies]
+anchor-lang = "0.20.1"
+anchor-spl = "0.20.1"
+rust_decimal = "1.20.0"
+solana-gateway = "0.1.1"
+spl-token = "3.2.0"
