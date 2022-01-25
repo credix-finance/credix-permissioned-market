@@ -93,7 +93,7 @@ impl Identity {
             "signing-authority".as_bytes().to_vec(),
             vec![self.signing_authority_bump],
         ]];
-        ctx.post_instructions
+        ctx.pre_instructions
             .push((instruction, cpi_accounts.to_account_infos(), seeds));
     }
 }
