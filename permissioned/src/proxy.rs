@@ -57,10 +57,6 @@ impl<'a> MarketProxy<'a> {
         // Decode instruction.
         let mut ix = MarketInstruction::unpack(ix_data);
 
-        for mw in &mut self.middlewares {
-            mw.init(&mut ctx)?;
-        }
-
         // Method dispatch.
         match ix {
             Some(MarketInstruction::InitOpenOrders) => {
@@ -196,7 +192,7 @@ impl<'a> MarketProxy<'a> {
         for (function, accounts, args) in post_callbacks {
             function(program_id, accounts, ix_data.to_vec(), args)?;
         }
-
+        
         Ok(())
     }
 }

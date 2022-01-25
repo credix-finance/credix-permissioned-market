@@ -10,7 +10,7 @@ cluster = "localnet"
 wallet = "/Users/sushantchandla/.config/solana/s.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*"
 
 [[test.genesis]]
 address = "v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP"

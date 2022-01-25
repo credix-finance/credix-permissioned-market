@@ -30,21 +30,13 @@ const stringByteArrayToByteArray = (path: string) => {
   return Uint8Array.from(JSON.parse(fs.readFileSync(path, "utf8")));
 };
 
-export const applyRatio = (ratio: Ratio, n: number) =>
-  (n * ratio.numerator) / ratio.denominator;
-
-export const notMultisigManager = anchor.web3.Keypair.fromSecretKey(
-  stringByteArrayToByteArray(
-    process.env.HOME + "/.config/solana/local-random-manager-key.json"
-  )
-);
-
 // Civic Authentication
 export const gatekeeperNetwork = anchor.web3.Keypair.fromSecretKey(
   stringByteArrayToByteArray(
     process.env.HOME + "/.config/solana/local-random-gatekeeper-network.json"
   )
 );
+
 export const gatekeeperAuthority = anchor.web3.Keypair.generate();
 
 export const initialize_gatekeeper = async () => {
@@ -152,21 +144,6 @@ export const get_global_market_state_pda = async (globalMarketSeed: string) => {
   );
 };
 
-export const get_deal_pda = async (
-  globalMarketPK: PublicKey,
-  borrowerPK: PublicKey,
-  dealNum: number
-) => {
-  return await anchor.web3.PublicKey.findProgramAddress(
-    [
-      globalMarketPK.toBuffer(),
-      borrowerPK.toBuffer(),
-      Buffer.from(anchor.utils.bytes.utf8.encode("deal-info")),
-    ],
-    program.programId
-  );
-};
-
 export const get_signing_authority_pda = async (globalMarketPK: PublicKey) => {
   return await PublicKey.findProgramAddress(
     [globalMarketPK.toBuffer()],
@@ -217,9 +194,6 @@ export const get_associated_token_address = async (
   );
 };
 
-export const ratiosEqual = (a: Ratio, b: Ratio) =>
-  a.numerator === b.numerator && a.denominator === b.denominator;
-
 // Credix pass
 export const create_credix_pass = async (
   values: [boolean, boolean],
@@ -263,75 +237,4 @@ export const update_credix_pass = async (
     },
     signers: [],
   });
-};
-
-export const getCurrentLpPerBase = async (
-  lpTokenMint: Token,
-  baseMint: Token
-) => {
-  const [globalMarketStatePda, _globalMarketStateBump] =
-    await get_global_market_state_pda(GLOBAL_MARKET_SEED);
-  const [signingAuthorityPda, signingAuthorityBump] =
-    await get_signing_authority_pda(globalMarketStatePda);
-  const lpTokenAmountInfo = await lpTokenMint.getMintInfo();
-  const globalStateBefore = await program.account.globalMarketState.fetch(
-    globalMarketStatePda
-  );
-  const liquidityPoolBaseTokenAccount = await get_associated_token_address(
-    baseMint.publicKey,
-    signingAuthorityPda
-  );
-  const liquidityPoolBaseTokenAccountInfo = await baseMint.getAccountInfo(
-    liquidityPoolBaseTokenAccount
-  );
-
-  return (
-    lpTokenAmountInfo.supply.toNumber() /
-    (globalStateBefore.totalOutstandingCredit.toNumber() +
-      liquidityPoolBaseTokenAccountInfo.amount.toNumber())
-  );
-};
-
-export const getCurrentBasePerLP = async (
-  lpTokenMint: Token,
-  usdcMint: Token
-) => {
-  const [globalMarketStatePda, _globalMarketStateBump] =
-    await get_global_market_state_pda(GLOBAL_MARKET_SEED);
-  const [signingAuthorityPda, signingAuthorityBump] =
-    await get_signing_authority_pda(globalMarketStatePda);
-  const lpTokenAmountInfo = await lpTokenMint.getMintInfo();
-  const globalStateBefore = await program.account.globalMarketState.fetch(
-    globalMarketStatePda
-  );
-  const liquidityPoolUSDCTokenAccount = await get_associated_token_address(
-    usdcMint.publicKey,
-    signingAuthorityPda
-  );
-  const liquidityPoolUSDCTokenAccountInfo = await usdcMint.getAccountInfo(
-    liquidityPoolUSDCTokenAccount
-  );
-
-  return (
-    (globalStateBefore.totalOutstandingCredit.toNumber() +
-      liquidityPoolUSDCTokenAccountInfo.amount.toNumber()) /
-    lpTokenAmountInfo.supply.toNumber()
-  );
-};
-
-export const getLiquidityPoolBaseAmount = async (usdcMint) => {
-  const [globalMarketStatePda, _globalMarketStateBump] =
-    await get_global_market_state_pda(GLOBAL_MARKET_SEED);
-  const [signingAuthorityPda, signingAuthorityBump] =
-    await get_signing_authority_pda(globalMarketStatePda);
-
-  const liquidityPoolUSDCTokenAccount = await get_associated_token_address(
-    usdcMint.publicKey,
-    signingAuthorityPda
-  );
-  const liquidityPoolUSDCTokenAccountInfo = await usdcMint.getAccountInfo(
-    liquidityPoolUSDCTokenAccount
-  );
-
-  return liquidityPoolUSDCTokenAccountInfo.amount.toNumber();
 };

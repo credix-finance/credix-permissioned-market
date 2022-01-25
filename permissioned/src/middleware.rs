@@ -19,6 +19,7 @@ pub struct Context<'a, 'info> {
     pub pre_instructions: Vec<(Instruction, Vec<AccountInfo<'info>>, Seeds)>,
     // Instructions to execution *after* the DEX relay CPI.
     pub post_instructions: Vec<(Instruction, Vec<AccountInfo<'info>>, Seeds)>,
+
     pub post_callbacks: Vec<(PostCallback<'a, 'info>, Vec<AccountInfo<'info>>, Vec<u8>)>,
 }
 
@@ -62,11 +63,6 @@ pub trait MarketMiddleware {
     /// any instruction by reading the instruction data here and then
     /// using it in any of the method handlers.
     fn instruction(&mut self, _data: &mut &[u8]) -> ProgramResult {
-        Ok(())
-    }
-
-    // Called before calling any dex Instruction
-    fn init(&mut self, _ctx: &mut Context) -> ProgramResult {
         Ok(())
     }
 
