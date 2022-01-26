@@ -16,7 +16,7 @@ describe("credix program test!", () => {
   // @ts-ignore
   const program = anchor.workspace.Credix as Program<Credix>;
   const treasury = anchor.web3.Keypair.generate();
-  const lpTokenMintKeypair = anchor.web3.Keypair.generate();
+  const lpTokenMintKeypair = utils.lpTokenMint;
   const GLOBAL_MARKET_SEED = utils.GLOBAL_MARKET_SEED;
   let baseMint;
   let treasuryPoolBaseAssociatedTokenPK;

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::account_info::AccountInfo;
 use anchor_lang::solana_program::entrypoint::ProgramResult;
 use anchor_lang::solana_program::pubkey::Pubkey;
-use credix::cpi::accounts::FreezeThawLpTokens;
+use credix::cpi::accounts::FreezeThawLpTokens; //codegen -- anchor rust
 use serum_dex_permissioned::serum_dex::instruction::{
     CancelOrderInstructionV2, NewOrderInstructionV3,
 };
@@ -18,7 +18,7 @@ pub mod permissioned_markets {
     pub fn entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         MarketProxy::new()
             .middleware(&mut Logger)
-            .middleware(&mut Identity::default())
+            .middleware(&mut CredixPermissionedMarket::default())
             .middleware(&mut ReferralFees::new(referral::ID))
             .middleware(&mut OpenOrdersPda::new())
             .run(program_id, accounts, data)
@@ -36,11 +36,11 @@ pub mod permissioned_markets {
 /// 7. `[]` token_program
 /// 8. `[]` credix_program
 #[derive(Default)]
-struct Identity {
+struct CredixPermissionedMarket {
     signing_authority_bump: u8,
 }
 
-impl Identity {
+impl CredixPermissionedMarket {
     fn freeze_lp_token_cpi(&self, ctx: &mut Context) {
         let credix_program = ctx.accounts[8].to_account_info();
         let cpi_accounts = FreezeThawLpTokens {
@@ -82,8 +82,10 @@ impl Identity {
             token_program: ctx.accounts[7].to_account_info(),
         };
         let account_meta = cpi_accounts.to_account_metas(None);
+        
         let ix = credix::instruction::ThawLpTokens;
         let data = anchor_lang::InstructionData::data(&ix);
+
         let instruction = anchor_lang::solana_program::instruction::Instruction {
             program_id: credix_program.key(),
             accounts: account_meta,
@@ -93,12 +95,13 @@ impl Identity {
             "signing-authority".as_bytes().to_vec(),
             vec![self.signing_authority_bump],
         ]];
+
         ctx.pre_instructions
             .push((instruction, cpi_accounts.to_account_infos(), seeds));
     }
 }
 
-impl MarketMiddleware for Identity {
+impl MarketMiddleware for CredixPermissionedMarket {
     fn instruction(&mut self, _data: &mut &[u8]) -> ProgramResult {
         self.signing_authority_bump = _data[0];
         *_data = &_data[1..];
@@ -169,18 +172,19 @@ impl MarketMiddleware for Identity {
         Ok(())
     }
 
-    fn fallback(&self, ctx: &mut Context) -> ProgramResult {
-        let cpi = anchor_lang::solana_program::system_instruction::create_account_with_seed(
-            &ctx.accounts[0].key(),
-            &ctx.accounts[1].key(),
-            &ctx.accounts[0].key(),
-            "signing-authority",
-            0,
-            0,
-            ctx.program_id,
-        );
-        anchor_lang::solana_program::program::invoke(&cpi, ctx.accounts.as_slice())
-    }
+    // fn fallback(&self, ctx: &mut Context) -> ProgramResult {
+        
+    //     let cpi = anchor_lang::solana_program::system_instruction::create_account_with_seed(
+    //         &ctx.accounts[0].key(),
+    //         &ctx.accounts[1].key(),
+    //         &ctx.accounts[0].key(),
+    //         "signing-authority",
+    //         0,
+    //         0,
+    //         ctx.program_id,
+    //     );
+    //     anchor_lang::solana_program::program::invoke(&cpi, ctx.accounts.as_slice())
+    // }
 }
 
 // Error.

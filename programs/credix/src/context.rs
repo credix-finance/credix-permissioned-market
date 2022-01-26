@@ -164,6 +164,7 @@ pub struct FreezeThawLpTokens<'info> {
         mut,
         seeds = [global_market_state.key().as_ref(), lp_holder.key.as_ref(), CREDIX_PASS_SEED.as_bytes()],
         bump,
+        
     )]
     pub credix_pass: Account<'info, CredixPass>,
     #[account(
