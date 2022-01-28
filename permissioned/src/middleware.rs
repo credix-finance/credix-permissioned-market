@@ -65,11 +65,6 @@ pub trait MarketMiddleware {
         Ok(())
     }
 
-    // Called before calling any dex Instruction
-    fn init(&mut self, _ctx: &mut Context) -> ProgramResult {
-        Ok(())
-    }
-
     fn init_open_orders(&self, _ctx: &mut Context) -> ProgramResult {
         Ok(())
     }
@@ -174,6 +169,7 @@ impl MarketMiddleware for OpenOrdersPda {
 
         // Initialize PDA.
         let mut accounts = &ctx.accounts[..];
+
         InitAccount::try_accounts(ctx.program_id, &mut accounts, &[self.bump, self.bump_init])?;
 
         // Add signer to context.
