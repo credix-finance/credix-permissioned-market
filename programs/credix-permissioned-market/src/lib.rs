@@ -1,3 +1,4 @@
+use anchor_lang::accounts::account;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::account_info::AccountInfo;
 use anchor_lang::solana_program::entrypoint::ProgramResult;
@@ -17,10 +18,10 @@ pub mod permissioned_markets {
     use super::*;
     pub fn entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         MarketProxy::new()
-            .middleware(&mut Logger)
             .middleware(&mut CredixPermissionedMarket::default())
-            .middleware(&mut ReferralFees::new(referral::ID))
             .middleware(&mut OpenOrdersPda::new())
+            .middleware(&mut ReferralFees::new(referral::ID))
+            .middleware(&mut Logger)
             .run(program_id, accounts, data)
     }
 }
@@ -46,14 +47,20 @@ impl CredixPermissionedMarket {
         let cpi_accounts = FreezeThawLpTokens {
             lp_holder: ctx.accounts[0].to_account_info(),
             lp_token_account: ctx.accounts[1].to_account_info(),
-            credix_permissioned_pda: ctx.accounts[2].to_account_info(),
+            credix_permissioned_pda: CredixPermissionedMarket::prepare_pda(
+                &ctx.accounts[2].to_account_info(),
+            ),
             signing_authority: ctx.accounts[3].to_account_info(),
             lp_token_mint_account: ctx.accounts[4].to_account_info(),
             global_market_state: ctx.accounts[5].to_account_info(),
             credix_pass: ctx.accounts[6].to_account_info(),
             token_program: ctx.accounts[7].to_account_info(),
+            associated_token_program: ctx.accounts[9].to_account_info(),
+            system_program: ctx.accounts[10].to_account_info(),
+            rent: ctx.accounts[11].to_account_info(),
+            gateway_token: ctx.accounts[12].to_account_info(),
         };
-        let account_meta = cpi_accounts.to_account_metas(None);
+        let account_meta = cpi_accounts.to_account_metas(Some(true));
         let ix = credix::instruction::FreezeLpTokens;
         let data = anchor_lang::InstructionData::data(&ix);
         let instruction = anchor_lang::solana_program::instruction::Instruction {
@@ -74,15 +81,21 @@ impl CredixPermissionedMarket {
         let cpi_accounts = FreezeThawLpTokens {
             lp_holder: ctx.accounts[0].to_account_info(),
             lp_token_account: ctx.accounts[1].to_account_info(),
-            credix_permissioned_pda: ctx.accounts[2].to_account_info(),
+            credix_permissioned_pda: CredixPermissionedMarket::prepare_pda(
+                &ctx.accounts[2].to_account_info(),
+            ),
             signing_authority: ctx.accounts[3].to_account_info(),
             lp_token_mint_account: ctx.accounts[4].to_account_info(),
             global_market_state: ctx.accounts[5].to_account_info(),
             credix_pass: ctx.accounts[6].to_account_info(),
             token_program: ctx.accounts[7].to_account_info(),
+            associated_token_program: ctx.accounts[9].to_account_info(),
+            system_program: ctx.accounts[10].to_account_info(),
+            rent: ctx.accounts[11].to_account_info(),
+            gateway_token: ctx.accounts[12].to_account_info(),
         };
-        let account_meta = cpi_accounts.to_account_metas(None);
-        
+        let account_meta = cpi_accounts.to_account_metas(Some(true));
+
         let ix = credix::instruction::ThawLpTokens;
         let data = anchor_lang::InstructionData::data(&ix);
 
@@ -99,26 +112,36 @@ impl CredixPermissionedMarket {
         ctx.pre_instructions
             .push((instruction, cpi_accounts.to_account_infos(), seeds));
     }
+
+    fn prepare_pda<'info>(acc_info: &AccountInfo<'info>) -> AccountInfo<'info> {
+        let mut acc_info = acc_info.clone();
+        acc_info.is_signer = true;
+        acc_info
+    }
 }
 
 impl MarketMiddleware for CredixPermissionedMarket {
     fn instruction(&mut self, _data: &mut &[u8]) -> ProgramResult {
         self.signing_authority_bump = _data[0];
         *_data = &_data[1..];
+        msg!(
+            "signing bump credixPermissionedMarket {}",
+            self.signing_authority_bump
+        );
         Ok(())
     }
 
     fn init_open_orders(&self, ctx: &mut Context) -> ProgramResult {
         self.thaw_lp_token_cpi(ctx);
         self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+        ctx.accounts = ctx.accounts[13..].to_vec();
         Ok(())
     }
 
     fn new_order_v3(&self, ctx: &mut Context, _ix: &mut NewOrderInstructionV3) -> ProgramResult {
         self.thaw_lp_token_cpi(ctx);
         self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+        ctx.accounts = ctx.accounts[13..].to_vec();
         Ok(())
     }
 
@@ -129,7 +152,7 @@ impl MarketMiddleware for CredixPermissionedMarket {
     ) -> ProgramResult {
         self.thaw_lp_token_cpi(ctx);
         self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+        ctx.accounts = ctx.accounts[13..].to_vec();
         Ok(())
     }
 
@@ -140,51 +163,36 @@ impl MarketMiddleware for CredixPermissionedMarket {
     ) -> ProgramResult {
         self.thaw_lp_token_cpi(ctx);
         self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+        ctx.accounts = ctx.accounts[13..].to_vec();
         Ok(())
     }
 
     fn settle_funds(&self, ctx: &mut Context) -> ProgramResult {
         self.thaw_lp_token_cpi(ctx);
         self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+        ctx.accounts = ctx.accounts[13..].to_vec();
         Ok(())
     }
 
     fn close_open_orders(&self, ctx: &mut Context) -> ProgramResult {
         self.thaw_lp_token_cpi(ctx);
         self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+        ctx.accounts = ctx.accounts[13..].to_vec();
         Ok(())
     }
 
-    fn prune(&self, ctx: &mut Context, _limit: &mut u16) -> ProgramResult {
-        self.thaw_lp_token_cpi(ctx);
-        self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[8..].to_vec();
+    fn prune(&self, _ctx: &mut Context, _limit: &mut u16) -> ProgramResult {
         Ok(())
     }
 
-    fn consume_events_permissioned(&self, ctx: &mut Context, _limit: &mut u16) -> ProgramResult {
-        self.thaw_lp_token_cpi(ctx);
-        self.freeze_lp_token_cpi(ctx);
-        ctx.accounts = ctx.accounts[9..].to_vec();
+    fn consume_events_permissioned(&self, _ctx: &mut Context, _limit: &mut u16) -> ProgramResult {
         Ok(())
     }
 
-    // fn fallback(&self, ctx: &mut Context) -> ProgramResult {
-        
-    //     let cpi = anchor_lang::solana_program::system_instruction::create_account_with_seed(
-    //         &ctx.accounts[0].key(),
-    //         &ctx.accounts[1].key(),
-    //         &ctx.accounts[0].key(),
-    //         "signing-authority",
-    //         0,
-    //         0,
-    //         ctx.program_id,
-    //     );
-    //     anchor_lang::solana_program::program::invoke(&cpi, ctx.accounts.as_slice())
-    // }
+    fn fallback(&self, _ctx: &mut Context) -> ProgramResult {
+        msg!("fallback!");
+        return Err(ProgramError::InvalidInstructionData);
+    }
 }
 
 // Error.

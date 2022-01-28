@@ -19,7 +19,6 @@ pub struct Context<'a, 'info> {
     pub pre_instructions: Vec<(Instruction, Vec<AccountInfo<'info>>, Seeds)>,
     // Instructions to execution *after* the DEX relay CPI.
     pub post_instructions: Vec<(Instruction, Vec<AccountInfo<'info>>, Seeds)>,
-
     pub post_callbacks: Vec<(PostCallback<'a, 'info>, Vec<AccountInfo<'info>>, Vec<u8>)>,
 }
 
@@ -170,6 +169,7 @@ impl MarketMiddleware for OpenOrdersPda {
 
         // Initialize PDA.
         let mut accounts = &ctx.accounts[..];
+
         InitAccount::try_accounts(ctx.program_id, &mut accounts, &[self.bump, self.bump_init])?;
 
         // Add signer to context.

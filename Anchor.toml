@@ -1,5 +1,5 @@
 [programs.localnet]
-credix_permissioned_market = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+credix_permissioned_market = "iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq"
 credix = "v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP"
 
 [registry]
@@ -17,9 +17,17 @@ address = "v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP"
 program = "./target/deploy/credix.so"
 
 [[test.genesis]]
+address = "iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq"
+program = "./target/deploy/credix_permissioned_market.so"
+
+[[test.genesis]]
 address = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs"
 program = "./artifacts/solana_gateway_program.so"
 
 [[test.genesis]]
 address = "4sN8PnN2ki2W4TFXAfzR645FWs8nimmsYeNtxM8RBK6A"
 program = "./artifacts/spl_token_faucet.so"
+
+[[test.genesis]]
+address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+program = "./artifacts/serum_dex.so"

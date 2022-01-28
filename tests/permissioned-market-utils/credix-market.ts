@@ -1,15 +1,29 @@
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import * as utils from "../utils";
-const { PublicKey } = require("@solana/web3.js");
-const anchor = require("@project-serum/anchor");
-const {
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import {
   OpenOrders,
   OpenOrdersPda,
   Logger,
   ReferralFees,
   PermissionedCrank,
   MarketProxyBuilder,
-} = require("@project-serum/serum");
+  DexInstructions,
+} from "@project-serum/serum";
+import * as anchor from "@project-serum/anchor";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { getTokenAccount } from "@project-serum/common";
+
+const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: PublicKey = new PublicKey(
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+);
+
+const GATEWAY_PROGRAM: PublicKey = new PublicKey(
+  "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs"
+);
 
 // Returns a client for the market proxy.
 //
@@ -17,110 +31,158 @@ const {
 // here as well.
 export async function loadCredixPermissionedMarket(
   connection,
-  proxyProgramId,
-  dexProgramId,
-  market,
-  lpMint,
-  credixProgram
+  proxyProgramId: PublicKey,
+  dexProgramId: PublicKey,
+  market: PublicKey,
+  lpMint: PublicKey,
+  credixProgram: PublicKey,
+  globalMarketSeed: string,
+  gatewayNetwork: PublicKey
 ) {
-  return new MarketProxyBuilder()
-    .middleware(
-      new OpenOrdersPda({
-        proxyProgramId,
+  return (
+    new MarketProxyBuilder()
+      .middleware(
+        new OpenOrdersPda({
+          proxyProgramId: proxyProgramId,
+          dexProgramId: dexProgramId,
+        })
+      )
+      .middleware(new ReferralFees())
+      .middleware(
+        new CredixPermissionedMarket(
+          dexProgramId,
+          proxyProgramId,
+          lpMint,
+          credixProgram,
+          globalMarketSeed,
+          gatewayNetwork
+        )
+      )
+      // .middleware(new Logger())
+      .load({
+        connection,
+        market,
         dexProgramId,
+        proxyProgramId,
+        options: { commitment: "recent" },
       })
-    )
-    .middleware(new ReferralFees())
-    .middleware(
-      new CredixPermissionedMarket(proxyProgramId, lpMint, credixProgram)
-    )
-    .middleware(new Logger())
-    .load({
-      connection,
-      market,
-      dexProgramId,
-      proxyProgramId,
-      options: { commitment: "recent" },
-    });
+  );
 }
 
 export class CredixPermissionedMarket {
-  private programId;
-  private lpMint;
-  private credixProgram;
-  constructor(programId, lpMint, credixProgram) {
+  private dexProgram: PublicKey;
+  private programId: PublicKey;
+  private lpMint: PublicKey;
+  private credixProgram: PublicKey;
+  private globalMarketSeed: string;
+  private gatewayNetwork: PublicKey;
+  constructor(
+    dexProgram: PublicKey,
+    programId: PublicKey,
+    lpMint: PublicKey,
+    credixProgram: PublicKey,
+    globalMarketSeed: string,
+    gatewayNetwork: PublicKey
+  ) {
+    this.dexProgram = dexProgram;
     this.programId = programId;
     this.lpMint = lpMint;
     this.credixProgram = credixProgram;
+    this.globalMarketSeed = globalMarketSeed;
+    this.gatewayNetwork = gatewayNetwork;
   }
-  async initOpenOrders(
-    ix,
-    globalMarketSeed: string,
-    initiator: typeof PublicKey
-  ) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  initOpenOrders(ix) {
+    this.proxy(ix, 3);
   }
-  async newOrderV3(ix, globalMarketSeed: string, initiator: typeof PublicKey) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  newOrderV3(ix) {
+    this.proxy(ix, 7);
   }
-  async cancelOrderV2(
-    ix,
-    globalMarketSeed: string,
-    initiator: typeof PublicKey
-  ) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  cancelOrderV2(ix) {
+    this.proxy(ix, 4);
   }
-  async cancelOrderByClientIdV2(
-    ix,
-    globalMarketSeed: string,
-    initiator: typeof PublicKey
-  ) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  cancelOrderByClientIdV2(ix) {
+    this.proxy(ix, 4);
   }
-  async settleFunds(ix, globalMarketSeed: string, initiator: typeof PublicKey) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  settleFunds(ix) {
+    this.proxy(ix, 2);
   }
-  async closeOpenOrders(
-    ix,
-    globalMarketSeed: string,
-    initiator: typeof PublicKey
-  ) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  closeOpenOrders(ix) {
+    this.proxy(ix, 1);
   }
-  async prune(ix, globalMarketSeed: string, initiator: typeof PublicKey) {
-    await this.proxy(ix, globalMarketSeed, initiator);
+  prune(ix) {
+    this.proxy(ix, 3);
   }
+  consumeEvents(ix) {}
+  consumeEventsPermissioned(ix) {}
 
-  async proxy(ix, globalMarketSeed: string, initiator: typeof PublicKey) {
+  proxy(ix, inititorIndex) {
+    let initiator: PublicKey = ix.keys[inititorIndex].pubkey;
     let [permissionedMarketPDA, permissionedBump] = findProgramAddressSync(
-      [Buffer.from("signing-authority")],
+      [Buffer.from(anchor.utils.bytes.utf8.encode("signing-authority"))],
       this.programId
     );
-    let [globalMarketState, globalMarketStateBump] =
-      await utils.get_global_market_state_pda(globalMarketSeed);
-    let [signingAuthority, _bump] = await utils.get_signing_authority_pda(
-      globalMarketState
+    let [globalMarketState, _globalMarketStateBump] = findProgramAddressSync(
+      [Buffer.from(anchor.utils.bytes.utf8.encode(this.globalMarketSeed))],
+      this.credixProgram
     );
-    let [credixPassPda, credixPassPdaBump] = await utils.get_credix_pass_pda(
-      initiator,
-      globalMarketSeed
+
+    let [signingAuthority, _bump] = findProgramAddressSync(
+      [globalMarketState.toBuffer()],
+      this.credixProgram
     );
-    let initiator_lpTokenAccount = await utils.get_associated_token_address(
-      this.lpMint,
-      initiator
+
+    let [credixPassPda, credixPassPdaBump] = findProgramAddressSync(
+      [
+        globalMarketState.toBuffer(),
+        initiator.toBuffer(),
+        Buffer.from(anchor.utils.bytes.utf8.encode("credix-pass")),
+      ],
+      this.credixProgram
+    );
+    const GATEWAY_TOKEN_ADDRESS_SEED = "gateway";
+
+    const seeds = [
+      initiator.toBuffer(),
+      Buffer.from(GATEWAY_TOKEN_ADDRESS_SEED, "utf8"),
+      Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
+      this.gatewayNetwork.toBuffer(),
+    ];
+
+    let gateway_account = findProgramAddressSync(seeds, GATEWAY_PROGRAM);
+
+    let initiator_lpTokenAccount = findProgramAddressSync(
+      [
+        initiator.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        this.lpMint.toBuffer(),
+      ],
+      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
     );
 
     ix.keys = [
-      { pubkey: initiator, isWritable: false, isSigner: true },
-      { pubkey: initiator_lpTokenAccount, isWritable: true, isSigner: false },
-      { pubkey: permissionedMarketPDA, isWritable: false, isSigner: true },
-      { pubkey: signingAuthority, isWritable: false, isSigner: true },
+      { pubkey: initiator, isWritable: true, isSigner: true },
+      {
+        pubkey: initiator_lpTokenAccount[0],
+        isWritable: true,
+        isSigner: false,
+      },
+      { pubkey: permissionedMarketPDA, isWritable: false, isSigner: false },
+      { pubkey: signingAuthority, isWritable: false, isSigner: false },
       { pubkey: this.lpMint, isWritable: false, isSigner: false },
       { pubkey: globalMarketState, isWritable: false, isSigner: false },
       { pubkey: credixPassPda, isWritable: false, isSigner: false },
+      { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
       { pubkey: this.credixProgram, isWritable: false, isSigner: false },
+      {
+        pubkey: ASSOCIATED_TOKEN_PROGRAM_ID,
+        isWritable: false,
+        isSigner: false,
+      },
+      { pubkey: SystemProgram.programId, isWritable: false, isSigner: false },
+      { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
+      { pubkey: gateway_account[0], isWritable: false, isSigner: false },
       ...ix.keys,
     ];
-    ix.data = [permissionedBump, ...ix.data];
+    ix.data = Buffer.concat([Buffer.from([permissionedBump]), ix.data]);
   }
 }

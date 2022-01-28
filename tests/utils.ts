@@ -23,7 +23,7 @@ const program = anchor.workspace.Credix;
 export const baseMintAuthority = anchor.web3.Keypair.generate();
 export const payer = anchor.web3.Keypair.generate();
 export const GLOBAL_MARKET_SEED = "credix-market";
-export const lpTokenMint = anchor.web3.Keypair.generate(); 
+export const lpTokenMint = anchor.web3.Keypair.generate();
 
 // Implementation to go from a string byte array to byte array
 const stringByteArrayToByteArray = (path: string) => {

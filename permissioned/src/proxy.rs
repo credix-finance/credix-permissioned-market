@@ -129,11 +129,12 @@ impl<'a> MarketProxy<'a> {
             seeds,
             accounts,
             pre_instructions,
-            post_instructions,
+            mut post_instructions,
             post_callbacks,
             ..
         } = ctx;
 
+        msg!("calling instructions");
         // Execute pre instructions.
         for (ix, acc_infos, seeds) in pre_instructions {
             let tmp_signers: Vec<Vec<&[u8]>> = seeds
@@ -175,6 +176,9 @@ impl<'a> MarketProxy<'a> {
             program::invoke_signed(&ix, &accounts, &signers)?;
         }
 
+        // Reverse this to make the Feeze lp Tokens last instruction of program!
+        post_instructions.reverse();
+        
         // Execute post instructions.
         for (ix, acc_infos, seeds) in post_instructions {
             let tmp_signers: Vec<Vec<&[u8]>> = seeds
@@ -192,7 +196,7 @@ impl<'a> MarketProxy<'a> {
         for (function, accounts, args) in post_callbacks {
             function(program_id, accounts, ix_data.to_vec(), args)?;
         }
-        
+
         Ok(())
     }
 }

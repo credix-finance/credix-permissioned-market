@@ -124,13 +124,16 @@ describe("credix program test!", () => {
 
     const [globalMarketStatePda, _globalMarketStateBump] =
       await utils.get_global_market_state_pda(GLOBAL_MARKET_SEED);
+      
     const [signingAuthorityPda, _signingAuthorityBump] =
       await utils.get_signing_authority_pda(globalMarketStatePda);
+
     const liquidityPoolBaseTokenAccount =
       await utils.get_associated_token_address(
         baseMint.publicKey,
         signingAuthorityPda
       );
+
     const [credixPassPDA, pass_bump] = await utils.get_credix_pass_pda(
       provider.wallet.publicKey,
       GLOBAL_MARKET_SEED

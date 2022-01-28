@@ -158,19 +158,18 @@ pub struct FreezeThawLpTokens<'info> {
         // constraint = credix_permissioned_pda.owner = "someprogram",
     )]
     pub credix_permissioned_pda: AccountInfo<'info>,
-    #[account(signer)]
+    #[account(signer, mut)]
     pub lp_holder: AccountInfo<'info>,
     #[account(
-        mut,
         seeds = [global_market_state.key().as_ref(), lp_holder.key.as_ref(), CREDIX_PASS_SEED.as_bytes()],
         bump,
-        
     )]
     pub credix_pass: Account<'info, CredixPass>,
     #[account(
-        mut,
-        constraint = lp_token_account.owner == lp_holder.key(),
-        constraint = lp_token_account.mint == lp_token_mint_account.key(),
+        init_if_needed,
+        payer = lp_holder,
+        associated_token::mint = lp_token_mint_account,
+        associated_token::authority = lp_holder
     )]
     pub lp_token_account: Account<'info, TokenAccount>,
     pub global_market_state: Account<'info, GlobalMarketState>,
@@ -180,10 +179,19 @@ pub struct FreezeThawLpTokens<'info> {
     )]
     pub signing_authority: AccountInfo<'info>,
     #[account(
-        mut,
         address = global_market_state.lp_token_mint_account,
     )]
     pub lp_token_mint_account: Account<'info, Mint>,
     #[account(address = spl_token::ID)]
     pub token_program: AccountInfo<'info>,
+    #[account(address = associated_token::ID)]
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    #[account(address = system_program::ID)]
+    pub system_program: AccountInfo<'info>,
+    #[account[address = rent::ID]]
+    pub rent: Sysvar<'info, Rent>,
+    #[account(
+        constraint = gateway_token.owner == &Pubkey::from_str(GATEWAY_PROGRAM_ID).unwrap()
+    )]
+    pub gateway_token: AccountInfo<'info>,
 }

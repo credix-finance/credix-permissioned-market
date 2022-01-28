@@ -1,35 +1,23 @@
-import { Program, Provider } from "@project-serum/anchor";
+import { Program } from "@project-serum/anchor";
 import { Credix } from "../target/types/credix";
 import { CredixPermissionedMarket } from "../target/types/credix_permissioned_market";
-const assert = require("assert");
-const { Token, TOKEN_PROGRAM_ID } = require("@solana/spl-token");
-const serum = require("@project-serum/serum");
-const anchor = require("@project-serum/anchor");
-const { BN } = anchor;
-const {
-  Keypair,
-  Transaction,
-  TransactionInstruction,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-} = anchor.web3;
-const {
-  DexInstructions,
-  OpenOrders,
-  OpenOrdersPda,
-  Logger,
-  ReferralFees,
-  MarketProxyBuilder,
-} = serum;
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { loadCredixPermissionedMarket } from "./permissioned-market-utils/credix-market";
 import { listCredixMarket } from "./permissioned-market-utils/market-lister";
 import * as utils from "./utils";
+import * as anchor from "@project-serum/anchor";
+import * as assert from "assert";
+import {
+  MarketProxy,
+  MarketProxyBuilder,
+  Middleware,
+  OpenOrders,
+  OpenOrdersPda,
+} from "@project-serum/serum";
+import { Token } from "@solana/spl-token";
 
 const DEX_PID = new PublicKey("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
-const REFERRAL_AUTHORITY = new PublicKey(
-  "3oSfkjQZKCneYvsCTZc9HViGAPqR8pYr4h9YeGB5ZxHf"
-);
+const referral = new PublicKey("EoYuxcwTfyznBF2ebzZ8McqvveyxtMNTGAXGmNKycchB");
 
 describe("credix-permissioned-market", () => {
   // Configure the client to use the local cluster.
@@ -41,59 +29,254 @@ describe("credix-permissioned-market", () => {
   const credixProgram = anchor.workspace.Credix as Program<Credix>;
 
   // Token client.
-  let usdcClient;
+  let baseClient: Token;
 
   // Global DEX accounts and clients shared accross all tests.
   let tokenAccount, usdcAccount;
-  let openOrders, openOrdersBump, openOrdersInitAuthority, openOrdersBumpinit;
+  let openOrders: PublicKey,
+    openOrdersBump,
+    openOrdersInitAuthority,
+    openOrdersBumpinit;
   let usdcPosted;
   let referralTokenAddress;
+  let marketProxy: MarketProxy;
+  const quoteLotSize = 100;
+  const baseLotSize = 100000;
+
+  let trader1 = anchor.web3.Keypair.generate();
 
   it("BOILERPLATE: Initializes an orderbook", async () => {
-    //   connection,
-    // proxyProgramId,
-    // dexProgramId,
-    // market,
-    // lpMint,
-    // credixProgram
+    baseClient = await utils.create_base_mint();
+
     const [marketAPublicKey] = await listCredixMarket({
       connection: provider.connection,
       wallet: provider.wallet,
-      baseMint: utils.lpTokenMint,
-      quoteMint: await utils.create_base_mint(),
-      baseLotSize: 100000,
-      quoteLotSize: 100,
+      baseMint: utils.lpTokenMint.publicKey,
+      quoteMint: baseClient.publicKey,
+      baseLotSize: baseLotSize,
+      quoteLotSize: quoteLotSize,
       dexProgramId: DEX_PID,
       proxyProgramId: permissionedMarketProgram.programId,
       feeRateBps: 0,
     });
 
-    let marketProxy = loadCredixPermissionedMarket(
+    marketProxy = await loadCredixPermissionedMarket(
       provider.connection,
       permissionedMarketProgram.programId,
       DEX_PID,
       marketAPublicKey,
-      utils.lpTokenMint,
-      credixProgram.programId
+      utils.lpTokenMint.publicKey,
+      credixProgram.programId,
+      utils.GLOBAL_MARKET_SEED,
+      utils.gatekeeperNetwork.publicKey
+    );
+  });
+
+  it("Should Create OpenOrder account for `wallet` and trader", async () => {
+    await utils.aidrop_sol(trader1.publicKey);
+
+    let tx = new Transaction();
+    tx.add(
+      marketProxy.instruction.initOpenOrders(
+        provider.wallet.publicKey,
+        marketProxy.market.address,
+        marketProxy.market.address,
+        marketProxy.market.address
+      )
+    );
+    await provider.send(tx);
+
+    await utils.issue_pass(trader1.publicKey);
+    await utils.issue_token(trader1.publicKey);
+
+    let tx2 = new Transaction();
+    tx2.add(
+      marketProxy.instruction.initOpenOrders(
+        trader1.publicKey,
+        marketProxy.market.address,
+        marketProxy.market.address,
+        marketProxy.market.address
+      )
     );
 
-    // const { marketProxyClient, godA, godUsdc, usdc } = await genesis({
-    //   provider,
-    //   proxyProgramId: program.programId,
-    // });
-    // marketProxy = marketProxyClient;
-    // usdcAccount = godUsdc;
-    // tokenAccount = godA;
-
-    // usdcClient = new Token(
-    //   provider.connection,
-    //   usdc,
-    //   TOKEN_PROGRAM_ID,
-    //   provider.wallet.payer
-    // );
-
-    // referral = await usdcClient.createAccount(REFERRAL_AUTHORITY);
+    await provider.send(tx2, [trader1]);
   });
+
+  it("BOILERPLATE: Calculates open orders addresses", async () => {
+    openOrders = await OpenOrdersPda.openOrdersAddress(
+      marketProxy.market.address,
+      provider.wallet.publicKey,
+      marketProxy.dexProgramId,
+      marketProxy.proxyProgramId
+    );
+
+    openOrdersInitAuthority = await OpenOrdersPda.marketAuthority(
+      marketProxy.market.address,
+      marketProxy.dexProgramId,
+      marketProxy.proxyProgramId
+    );
+  });
+
+  it("Posts a bid on the orderbook", async () => {
+    const size = 1;
+    const price = 1;
+    const usdcAccount = await baseClient.getOrCreateAssociatedAccountInfo(
+      provider.wallet.publicKey
+    );
+
+    usdcPosted = new anchor.BN(quoteLotSize).mul(
+      marketProxy.market
+        .baseSizeNumberToLots(size)
+        .mul(marketProxy.market.priceNumberToLots(price))
+    );
+
+    await utils.airdrop_mint(
+      baseClient,
+      utils.baseMintAuthority,
+      usdcAccount.address,
+      1000_000_000
+    );
+
+    const tx = new Transaction();
+    tx.add(
+      marketProxy.instruction.newOrderV3({
+        owner: provider.wallet.publicKey,
+        payer: usdcAccount.address,
+        side: "buy",
+        price,
+        size,
+        orderType: "postOnly",
+        clientId: new anchor.BN(999),
+        openOrdersAddressKey: openOrders,
+        selfTradeBehavior: "abortTransaction",
+      })
+    );
+    await provider.send(tx);
+  });
+
+  it("Cancels a bid on the orderbook", async () => {
+    // Given.
+    const beforeOoAccount = await OpenOrders.load(
+      provider.connection,
+      openOrders,
+      DEX_PID
+    );
+
+    // When.
+    const tx = new Transaction();
+    tx.add(
+      await marketProxy.instruction.cancelOrderByClientId(
+        provider.wallet.publicKey,
+        openOrders,
+        new anchor.BN(999)
+      )
+    );
+    await provider.send(tx);
+
+    // Then.
+    const afterOoAccount = await OpenOrders.load(
+      provider.connection,
+      openOrders,
+      DEX_PID
+    );
+    assert.ok(beforeOoAccount.quoteTokenFree.eq(new anchor.BN(0)));
+    assert.ok(beforeOoAccount.quoteTokenTotal.eq(usdcPosted));
+    assert.ok(afterOoAccount.quoteTokenFree.eq(usdcPosted));
+    assert.ok(afterOoAccount.quoteTokenTotal.eq(usdcPosted));
+  });
+
+  it("Posts several bids and asks on the orderbook", async () => {
+    const size = 10;
+    const price = 2;
+    const usdcAccount = await baseClient.getOrCreateAssociatedAccountInfo(
+      provider.wallet.publicKey
+    );
+    const lpTokenAccount = await utils.get_associated_token_address(
+      utils.lpTokenMint.publicKey,
+      provider.wallet.publicKey
+    );
+
+    for (let k = 0; k < 10; k += 1) {
+      const tx = new Transaction();
+      tx.add(
+        marketProxy.instruction.newOrderV3({
+          owner: provider.wallet.publicKey,
+          payer: usdcAccount.address,
+          side: "buy",
+          price,
+          size,
+          orderType: "postOnly",
+          clientId: new anchor.BN(999),
+          openOrdersAddressKey: openOrders,
+          selfTradeBehavior: "abortTransaction",
+        })
+      );
+      await provider.send(tx);
+    }
+
+    const sizeAsk = 10;
+    const priceAsk = 10;
+
+    for (let k = 0; k < 10; k += 1) {
+      const txAsk = new Transaction();
+      txAsk.add(
+        marketProxy.instruction.newOrderV3({
+          owner: provider.wallet.publicKey,
+          payer: lpTokenAccount,
+          side: "sell",
+          price: priceAsk,
+          size: sizeAsk,
+          orderType: "postOnly",
+          clientId: new anchor.BN(1000),
+          openOrdersAddressKey: openOrders,
+          selfTradeBehavior: "abortTransaction",
+        })
+      );
+      await provider.send(txAsk);
+    }
+  });
+
+  // it("Settles funds on the orderbook", async () => {
+  //   // Given.
+  //   // const usdcAccount = await baseClient.getOrCreateAssociatedAccountInfo(
+  //   //   provider.wallet.publicKey
+  //   // );
+  //   // const lpTokenAccount = await utils.get_associated_token_address(
+  //   //   utils.lpTokenMint.publicKey,
+  //   //   provider.wallet.publicKey
+  //   // );
+
+  //   // When.
+  //   const tx = new Transaction();
+  //   tx.add(
+  //     marketProxy.instruction.settleFunds(
+  //       openOrders,
+  //       provider.wallet.publicKey,
+  //       utils.lpTokenMint.publicKey,
+  //       baseClient.publicKey,
+  //       referral
+  //     )
+  //   );
+
+  //   await provider.send(tx);
+  // });
+
+  // const { marketProxyClient, godA, godUsdc, usdc } = await genesis({
+  //   provider,
+  //   proxyProgramId: program.programId,
+  // });
+  // marketProxy = marketProxyClient;
+  // usdcAccount = godUsdc;
+  // tokenAccount = godA;
+
+  // usdcClient = new Token(
+  //   provider.connection,
+  //   usdc,
+  //   TOKEN_PROGRAM_ID,
+  //   provider.wallet.payer
+  // );
+
+  // referral = await usdcClient.createAccount(REFERRAL_AUTHORITY);
 
   // it("BOILERPLATE: Calculates open orders addresses", async () => {
   //   const [_openOrders, bump] = await PublicKey.findProgramAddress(

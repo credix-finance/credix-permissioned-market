@@ -10,9 +10,6 @@ const {
   OpenOrdersPda,
   MARKET_STATE_LAYOUT_V3,
 } = serum;
-// const { Identity } = require("./market-proxy");
-// const { DEX_PID } = require("./common");
-const DEX_PID = new PublicKey("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
 
 // Creates a market on the dex.
 export async function listCredixMarket({
@@ -33,6 +30,8 @@ export async function listCredixMarket({
   const asks = new Account();
   const baseVault = new Account();
   const quoteVault = new Account();
+  const pruneAuthority = new Account();
+  const crankAuthority = new Account();
   const quoteDustThreshold = new BN(100);
 
   const [vaultOwner, vaultSignerNonce] = await getVaultOwnerAndNonce(
@@ -106,7 +105,11 @@ export async function listCredixMarket({
       lamports: await connection.getMinimumBalanceForRentExemption(65536 + 12),
       space: 65536 + 12,
       programId: dexProgramId,
-    }),
+    })
+  );
+
+  const tx3 = new Transaction();
+  tx3.add(
     DexInstructions.initializeMarket({
       market: market.publicKey,
       requestQueue: requestQueue.publicKey,
@@ -125,9 +128,11 @@ export async function listCredixMarket({
       programId: dexProgramId,
       authority: await OpenOrdersPda.marketAuthority(
         market.publicKey,
-        DEX_PID,
+        dexProgramId,
         proxyProgramId
       ),
+      pruneAuthority: pruneAuthority.publicKey,
+      crankAuthority: crankAuthority.publicKey,
     })
   );
 
@@ -136,6 +141,10 @@ export async function listCredixMarket({
     {
       transaction: tx2,
       signers: [market, requestQueue, eventQueue, bids, asks],
+    },
+    {
+      transaction: tx3,
+      signers: [],
     },
   ];
   for (let tx of transactions) {
@@ -146,7 +155,7 @@ export async function listCredixMarket({
   return [market.publicKey, vaultOwner];
 }
 
-async function getVaultOwnerAndNonce(marketPublicKey, dexProgramId = DEX_PID) {
+async function getVaultOwnerAndNonce(marketPublicKey, dexProgramId) {
   const nonce = new BN(0);
   while (nonce.toNumber() < 255) {
     try {
