@@ -78,7 +78,7 @@ export const issue_pass = async (publicKey: PublicKey) => {
   const [globalMarketStatePda, _globalMarketStateBump] =
     await get_global_market_state_pda(GLOBAL_MARKET_SEED);
 
-  await program.rpc.createCredixPass(passBump, true, true, {
+  await program.rpc.createCredixPass(passBump, {
     accounts: {
       owner: provider.wallet.publicKey,
       globalMarketState: globalMarketStatePda,
@@ -196,7 +196,6 @@ export const get_associated_token_address = async (
 
 // Credix pass
 export const create_credix_pass = async (
-  values: [boolean, boolean],
   pda: PublicKey,
   bump: number,
   publicKey: PublicKey,
@@ -206,7 +205,7 @@ export const create_credix_pass = async (
   const [globalMarketStatePda, _globalMarketStateBump] =
     await get_global_market_state_pda(globalMarketStateSeed);
 
-  await program.rpc.createCredixPass(bump, values[0], values[1], {
+  await program.rpc.createCredixPass(bump,  {
     accounts: {
       owner: owner ? owner : provider.wallet.publicKey,
       passHolder: publicKey,
@@ -228,7 +227,7 @@ export const update_credix_pass = async (
   const [globalMarketStatePda, _globalMarketStateBump] =
     await get_global_market_state_pda(GLOBAL_MARKET_SEED);
 
-  await program.rpc.updateCredixPass(values[0], values[1], values[2], {
+  await program.rpc.updateCredixPass(false, {
     accounts: {
       owner: owner ? owner : provider.wallet.publicKey,
       passHolder: publicKey,

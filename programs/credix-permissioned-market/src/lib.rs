@@ -1,4 +1,3 @@
-use anchor_lang::accounts::account;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::account_info::AccountInfo;
 use anchor_lang::solana_program::entrypoint::ProgramResult;

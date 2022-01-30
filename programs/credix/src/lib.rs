@@ -38,34 +38,14 @@ pub mod credix {
         processor::process_deposit(ctx, amount)
     }
 
-    pub fn create_credix_pass(
-        ctx: Context<CreateCredixPass>,
-        pass_bump: u8,
-        is_underwriter: bool,
-        is_borrower: bool,
-    ) -> ProgramResult {
-        msg!(
-            "Create Credix pass with pass_bump: {}, is_underwriter: {}, is_borrower: {}",
-            pass_bump,
-            is_underwriter,
-            is_borrower
-        );
-        processor::process_create_credix_pass(ctx, pass_bump, is_underwriter, is_borrower)
+    pub fn create_credix_pass(ctx: Context<CreateCredixPass>, pass_bump: u8) -> ProgramResult {
+        msg!("Create Credix pass with pass_bump: {}", pass_bump,);
+        processor::process_create_credix_pass(ctx, pass_bump)
     }
 
-    pub fn update_credix_pass(
-        ctx: Context<UpdateCredixPass>,
-        is_active: bool,
-        is_underwriter: bool,
-        is_borrower: bool,
-    ) -> ProgramResult {
-        msg!(
-            "Update Credix pass with is_active: {}, is_underwriter: {}, is_borrower: {}",
-            is_active,
-            is_underwriter,
-            is_borrower
-        );
-        processor::process_update_credix_pass(ctx, is_active, is_underwriter, is_borrower)
+    pub fn update_credix_pass(ctx: Context<UpdateCredixPass>, is_active: bool) -> ProgramResult {
+        msg!("Update Credix pass with is_active: {}", is_active,);
+        processor::process_update_credix_pass(ctx, is_active)
     }
 
     pub fn freeze_lp_tokens(ctx: Context<FreezeThawLpTokens>) -> ProgramResult {
