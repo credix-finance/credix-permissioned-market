@@ -15,11 +15,9 @@ describe("credix program test!", () => {
   // bug in 0.19.0
   // @ts-ignore
   const program = anchor.workspace.Credix as Program<Credix>;
-  const treasury = anchor.web3.Keypair.generate();
   const lpTokenMintKeypair = utils.lpTokenMint;
   const GLOBAL_MARKET_SEED = utils.GLOBAL_MARKET_SEED;
   let baseMint;
-  let treasuryPoolBaseAssociatedTokenPK;
   let providerBaseAssociatedTokenPK;
   let lpTokenMint;
   let gatewayToken;
@@ -27,13 +25,6 @@ describe("credix program test!", () => {
   it("Should initialize all components", async () => {
     await utils.aidrop_sol(utils.payer.publicKey);
     baseMint = await utils.create_base_mint();
-
-    treasuryPoolBaseAssociatedTokenPK = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      baseMint.publicKey,
-      treasury.publicKey
-    );
 
     providerBaseAssociatedTokenPK = await baseMint.createAssociatedTokenAccount(
       provider.wallet.publicKey
@@ -74,8 +65,6 @@ describe("credix program test!", () => {
           globalMarketState: globalMarketStatePda,
           signingAuthority: signingAuthorityPda,
           liquidityPoolTokenAccount: liquidityPoolBaseTokenAccount,
-          treasury: treasury.publicKey,
-          treasuryPoolTokenAccount: treasuryPoolBaseAssociatedTokenPK,
           lpTokenMintAccount: lpTokenMintKeypair.publicKey,
           baseMintAccount: baseMint.publicKey,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,

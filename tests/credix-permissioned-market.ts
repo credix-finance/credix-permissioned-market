@@ -1,7 +1,12 @@
 import { Program } from "@project-serum/anchor";
 import { Credix } from "../target/types/credix";
 import { CredixPermissionedMarket } from "../target/types/credix_permissioned_market";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Transaction,
+} from "@solana/web3.js";
 import { loadCredixPermissionedMarket } from "./permissioned-market-utils/credix-market";
 import { listCredixMarket } from "./permissioned-market-utils/market-lister";
 import * as utils from "./utils";
@@ -15,6 +20,7 @@ import {
   OpenOrdersPda,
 } from "@project-serum/serum";
 import { Token } from "@solana/spl-token";
+import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 
 const DEX_PID = new PublicKey("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
 const referral = new PublicKey("EoYuxcwTfyznBF2ebzZ8McqvveyxtMNTGAXGmNKycchB");
@@ -46,6 +52,28 @@ describe("credix-permissioned-market", () => {
   let trader1 = anchor.web3.Keypair.generate();
 
   it("BOILERPLATE: Initializes an orderbook", async () => {
+    // Create the signing PDA for credix-permissioned-market
+    const [pda_address, bump] = findProgramAddressSync(
+      [Buffer.from(anchor.utils.bytes.utf8.encode("signing-authority"))],
+      permissionedMarketProgram.programId
+    );
+    let tx = new Transaction();
+    tx.add({
+      keys: [
+        {
+          pubkey: provider.wallet.publicKey,
+          isSigner: true,
+          isWritable: true,
+        },
+        { pubkey: pda_address, isSigner: false, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+      ],
+      data: Buffer.from([255, bump]),
+      programId: permissionedMarketProgram.programId,
+    });
+    await provider.send(tx);
+
     baseClient = await utils.create_base_mint();
 
     const [marketAPublicKey] = await listCredixMarket({
