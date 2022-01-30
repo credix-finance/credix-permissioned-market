@@ -9,7 +9,6 @@ use std::mem::size_of;
 
 use crate::errors::ErrorCode;
 use crate::*;
-use std::str::FromStr;
 
 #[derive(Accounts)]
 #[instruction(signing_authority_bump: u8, global_market_state_bump: u8, global_market_seed: String)]
@@ -62,7 +61,7 @@ pub struct DepositFunds<'info> {
     #[account(mut, signer)]
     pub investor: AccountInfo<'info>,
     #[account(
-        constraint = gateway_token.owner == &Pubkey::from_str(GATEWAY_PROGRAM_ID).unwrap()
+        constraint = gateway_token.owner == &gateway_program::ID,
     )]
     pub gateway_token: AccountInfo<'info>,
     #[account(mut)]
@@ -154,7 +153,7 @@ pub struct UpdateCredixPass<'info> {
 pub struct FreezeThawLpTokens<'info> {
     #[account(
         signer,
-        // constraint = credix_permissioned_pda.owner = "someprogram",
+        constraint = credix_permissioned_pda.owner == &permissioned_market_program::ID,
     )]
     pub credix_permissioned_pda: AccountInfo<'info>,
     #[account(signer, mut)]
@@ -191,7 +190,7 @@ pub struct FreezeThawLpTokens<'info> {
     #[account[address = rent::ID]]
     pub rent: Sysvar<'info, Rent>,
     #[account(
-        constraint = gateway_token.owner == &Pubkey::from_str(GATEWAY_PROGRAM_ID).unwrap()
+        constraint = gateway_token.owner == &gateway_program::ID
     )]
     pub gateway_token: AccountInfo<'info>,
 }

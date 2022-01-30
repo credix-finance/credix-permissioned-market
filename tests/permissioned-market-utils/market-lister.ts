@@ -1,15 +1,17 @@
-const anchor = require("@project-serum/anchor");
-const { BN } = anchor;
-const { Account, PublicKey, Transaction, SystemProgram } =
-  require("@project-serum/anchor").web3;
-const { TOKEN_PROGRAM_ID } = require("@solana/spl-token");
-const serum = require("@project-serum/serum");
-const {
+import {
+  Account,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+} from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
   DexInstructions,
   TokenInstructions,
   OpenOrdersPda,
   MARKET_STATE_LAYOUT_V3,
-} = serum;
+} from "@project-serum/serum";
+import * as anchor from "@project-serum/anchor";
 
 // Creates a market on the dex.
 export async function listCredixMarket({
@@ -32,7 +34,7 @@ export async function listCredixMarket({
   const quoteVault = new Account();
   const pruneAuthority = new Account();
   const crankAuthority = new Account();
-  const quoteDustThreshold = new BN(100);
+  const quoteDustThreshold = new anchor.BN(100);
 
   const [vaultOwner, vaultSignerNonce] = await getVaultOwnerAndNonce(
     market.publicKey,
@@ -120,8 +122,8 @@ export async function listCredixMarket({
       quoteVault: quoteVault.publicKey,
       baseMint,
       quoteMint,
-      baseLotSize: new BN(baseLotSize),
-      quoteLotSize: new BN(quoteLotSize),
+      baseLotSize: new anchor.BN(baseLotSize),
+      quoteLotSize: new anchor.BN(quoteLotSize),
       feeRateBps,
       vaultSignerNonce,
       quoteDustThreshold,
@@ -156,7 +158,7 @@ export async function listCredixMarket({
 }
 
 async function getVaultOwnerAndNonce(marketPublicKey, dexProgramId) {
-  const nonce = new BN(0);
+  const nonce = new anchor.BN(0);
   while (nonce.toNumber() < 255) {
     try {
       const vaultOwner = await PublicKey.createProgramAddress(

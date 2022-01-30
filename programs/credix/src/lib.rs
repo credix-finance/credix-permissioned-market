@@ -13,7 +13,14 @@ declare_id!("v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP");
 
 pub const CREDIX_PASS_SEED: &str = "credix-pass";
 
-pub const GATEWAY_PROGRAM_ID: &str = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs";
+pub mod gateway_program {
+    use anchor_lang::prelude::declare_id;
+    declare_id!("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs");
+}
+pub mod permissioned_market_program {
+    use anchor_lang::prelude::declare_id;
+    declare_id!("iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq");
+}
 
 #[program]
 pub mod credix {
