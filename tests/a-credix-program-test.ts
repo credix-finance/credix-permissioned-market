@@ -111,7 +111,6 @@ describe("credix program test!", () => {
     );
 
     await utils.create_credix_pass(
-      [true, true],
       credixPassPDA,
       pass_bump,
       provider.wallet.publicKey,
@@ -166,7 +165,7 @@ describe("credix program test!", () => {
       });
       assert.ok(false);
     } catch (err) {
-      assert.equal(err.code, 6011);
+      assert.equal(err.code, 6010);
       assert.equal(err.msg, "Not enough Base tokens.");
     }
   });

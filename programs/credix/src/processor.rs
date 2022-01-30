@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{util::civic_check, *};
 use anchor_lang::prelude::*;
 use spl_token_utils::*;
 
@@ -42,15 +42,8 @@ pub fn process_deposit(ctx: Context<DepositFunds>, amount: u64) -> ProgramResult
     Ok(())
 }
 
-pub fn process_create_credix_pass(
-    ctx: Context<CreateCredixPass>,
-    pass_bump: u8,
-    is_underwriter: bool,
-    is_borrower: bool,
-) -> ProgramResult {
+pub fn process_create_credix_pass(ctx: Context<CreateCredixPass>, pass_bump: u8) -> ProgramResult {
     ctx.accounts.credix_pass.active = true;
-    ctx.accounts.credix_pass.is_borrower = is_borrower;
-    ctx.accounts.credix_pass.is_underwriter = is_underwriter;
     ctx.accounts.credix_pass.bump = pass_bump;
 
     Ok(())
@@ -59,17 +52,18 @@ pub fn process_create_credix_pass(
 pub fn process_update_credix_pass(
     ctx: Context<UpdateCredixPass>,
     is_active: bool,
-    is_underwriter: bool,
-    is_borrower: bool,
 ) -> ProgramResult {
     ctx.accounts.credix_pass.active = is_active;
-    ctx.accounts.credix_pass.is_borrower = is_borrower;
-    ctx.accounts.credix_pass.is_underwriter = is_underwriter;
 
     Ok(())
 }
 
 pub fn freeze_lp_tokens(ctx: Context<FreezeThawLpTokens>) -> ProgramResult {
+    civic_check(
+        &ctx.accounts.lp_holder,
+        &ctx.accounts.gateway_token,
+        &ctx.accounts.global_market_state.gatekeeper_network,
+    )?;
     freeze_lp_token_account(
         &mut ctx.accounts.lp_token_account,
         &ctx.accounts.lp_token_mint_account,
@@ -80,6 +74,11 @@ pub fn freeze_lp_tokens(ctx: Context<FreezeThawLpTokens>) -> ProgramResult {
 }
 
 pub fn thaw_lp_tokens(ctx: Context<FreezeThawLpTokens>) -> ProgramResult {
+    civic_check(
+        &ctx.accounts.lp_holder,
+        &ctx.accounts.gateway_token,
+        &ctx.accounts.global_market_state.gatekeeper_network,
+    )?;
     thaw_lp_token_account(
         &mut ctx.accounts.lp_token_account,
         &ctx.accounts.lp_token_mint_account,

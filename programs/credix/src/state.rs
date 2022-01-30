@@ -14,7 +14,5 @@ pub struct GlobalMarketState {
 #[derive(Default)]
 pub struct CredixPass {
     pub bump: u8,
-    pub is_borrower: bool,
-    pub is_underwriter: bool,
     pub active: bool,
 }

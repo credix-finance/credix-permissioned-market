@@ -6,8 +6,6 @@ pub enum ErrorCode {
     NotEnoughLiquidity,
     #[msg("The Signer is not authorized to use this instruction.")]
     UnauthorizedSigner,
-    #[msg("Credix pass is invalid for this request.")]
-    CredixPassInvalid,
     #[msg("Credix pass is inactive at the moment.")]
     CredixPassInactive,
     #[msg("Overflow occured.")]

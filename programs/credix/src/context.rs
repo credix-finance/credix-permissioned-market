@@ -101,7 +101,6 @@ pub struct DepositFunds<'info> {
         seeds = [global_market_state.key().as_ref(), investor.key.as_ref(), CREDIX_PASS_SEED.as_bytes()],
         bump,
         constraint = credix_pass.active @ ErrorCode::CredixPassInactive,
-        constraint = credix_pass.is_underwriter @ ErrorCode::CredixPassInvalid,
     )]
     pub credix_pass: Account<'info, CredixPass>,
     #[account(address = global_market_state.liquidity_pool_token_mint_account)]
@@ -163,6 +162,7 @@ pub struct FreezeThawLpTokens<'info> {
     #[account(
         seeds = [global_market_state.key().as_ref(), lp_holder.key.as_ref(), CREDIX_PASS_SEED.as_bytes()],
         bump,
+        constraint = credix_pass.active @ ErrorCode::CredixPassInactive,
     )]
     pub credix_pass: Account<'info, CredixPass>,
     #[account(
