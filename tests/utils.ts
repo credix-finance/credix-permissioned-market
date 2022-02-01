@@ -20,7 +20,7 @@ anchor.setProvider(provider);
 // @ts-ignore
 const program = anchor.workspace.Credix;
 
-export const baseMintAuthority = anchor.web3.Keypair.generate();
+//export const baseMintAuthority = anchor.web3.Keypair.generate();
 export const payer = anchor.web3.Keypair.generate();
 export const GLOBAL_MARKET_SEED = "credix-market";
 export const lpTokenMint = anchor.web3.Keypair.generate();
@@ -168,17 +168,6 @@ export const get_credix_pass_pda = async (
   );
 };
 
-// Create Mints
-export const create_base_mint = async () => {
-  return await Token.createMint(
-    provider.connection,
-    payer,
-    baseMintAuthority.publicKey,
-    null,
-    6,
-    TOKEN_PROGRAM_ID
-  );
-};
 
 // Get Associated Token Address
 export const get_associated_token_address = async (

@@ -24,6 +24,8 @@ async function init() {
   let provider = Provider.env();
   setProvider(provider);
 
+  const baseMintPk = new anchor.web3.PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"); 
+
   const program = anchor.workspace.Credix as Program<Credix>;
   const permissionedMarketProgram = anchor.workspace
     .CredixPermissionedMarket as Program<CredixPermissionedMarket>;
@@ -33,22 +35,15 @@ async function init() {
   };
   const lpTokenMintKeypair = utils.lpTokenMint;
   const GLOBAL_MARKET_SEED = utils.GLOBAL_MARKET_SEED;
-  let baseMint;
   let providerBaseAssociatedTokenPK;
   let lpTokenMint;
   let gatewayToken;
   await utils.aidrop_sol(utils.payer.publicKey);
-  baseMint = await utils.create_base_mint();
 
-  providerBaseAssociatedTokenPK = await baseMint.createAssociatedTokenAccount(
+
+  providerBaseAssociatedTokenPK = await utils.get_associated_token_address(
+    baseMintPk, 
     provider.wallet.publicKey
-  );
-
-  await utils.airdrop_mint(
-    baseMint,
-    utils.baseMintAuthority,
-    providerBaseAssociatedTokenPK,
-    1000_000_000
   );
 
   // issue civic tokens
@@ -62,7 +57,7 @@ async function init() {
     await utils.get_signing_authority_pda(globalMarketStatePda);
   const liquidityPoolBaseTokenAccount =
     await utils.get_associated_token_address(
-      baseMint.publicKey,
+      baseMintPk,
       signingAuthorityPda
     );
 
@@ -78,7 +73,7 @@ async function init() {
         signingAuthority: signingAuthorityPda,
         liquidityPoolTokenAccount: liquidityPoolBaseTokenAccount,
         lpTokenMintAccount: lpTokenMintKeypair.publicKey,
-        baseMintAccount: baseMint.publicKey,
+        baseMintAccount: baseMintPk,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -114,7 +109,7 @@ async function init() {
     connection: provider.connection,
     wallet: provider.wallet,
     baseMint: utils.lpTokenMint.publicKey,
-    quoteMint: baseMint.publicKey,
+    quoteMint: baseMintPk,
     baseLotSize: 10000,
     quoteLotSize: 10000,
     dexProgramId: DEX_PID,
