@@ -14,7 +14,7 @@ import {
 } from "@solana/spl-token";
 import * as utils from "../tests/utils";
 import * as fs from "fs";
-import { CredixPermissionedMarket } from "../target/types/credix_permissioned_market";
+import { PermissionedMarkets } from "../target/types/permissioned_markets";
 import { listCredixMarket } from "../tests/permissioned-market-utils/market-lister";
 import { initialize_gatekeeper, issue_token } from "../tests/utils";
 
@@ -26,7 +26,7 @@ async function init() {
 
   const program = anchor.workspace.Credix as Program<Credix>;
   const permissionedMarketProgram = anchor.workspace
-    .CredixPermissionedMarket as Program<CredixPermissionedMarket>;
+    .CredixPermissionedMarket as Program<PermissionedMarkets>;
 
   const stringByteArrayToByteArray = (path: string) => {
     return Uint8Array.from(JSON.parse(fs.readFileSync(path, "utf8")));
