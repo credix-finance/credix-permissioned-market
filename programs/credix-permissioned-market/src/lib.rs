@@ -30,11 +30,11 @@ pub mod permissioned_markets {
 }
 
 /// Accounts
-/// 0. `[signer]` lp token holder(buyer)
-/// 1. `[writable]` lp token account
+/// 0. `[signer]` LP token holder(buyer)
+/// 1. `[writable]` LP token account
 /// 2. `[signer]` credix_permissioned_pda
 /// 3. `[]` signing_authority
-/// 4. `[]` lp_token_mint_account
+/// 4. `[]` LP_token_mint_account
 /// 5. `[]` global_market_state
 /// 6. `[]` credix_pass
 /// 7. `[]` token_program
