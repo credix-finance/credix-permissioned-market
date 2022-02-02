@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::solana_program::system_program;
 use anchor_lang::Accounts;
-use anchor_spl::{dex, token};
+use anchor_spl::token;
 use serum_dex::instruction::*;
 use serum_dex::matching::Side;
 use serum_dex::state::OpenOrders;
@@ -592,3 +592,8 @@ pub struct InitAccount<'info> {
 //
 // b"serum".len() + b"padding".len().
 const SERUM_PADDING: usize = 12;
+
+mod dex {
+    use anchor_lang::prelude::declare_id;
+    declare_id!("A3KCE92wXZMtGGJT6XYL2KHva58VXvWkhcqfJ6Q5JEia");
+}
