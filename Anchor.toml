@@ -1,6 +1,6 @@
 [programs.localnet]
-credix_permissioned_market = "B82qssUC4qJT3DXohg8A1k6TuUBNcjnf5d4KX8uJmhDK"
-credix = "D58Th9Y4tFssgZaCPQ6diJoiFC6TvcENsiYR6ZbRoosK"
+credix_permissioned_market = "4HaBtighJFPCmLCzkaR8dhwQhSv7rynk3d2dbPPKtZgA"
+credix = "23LA3K8AW5JM9QyfF4xa27Q5qgkcLGi8tJgCi4dp4Xjc"
 
 [registry]
 url = "https://anchor.projectserum.com"

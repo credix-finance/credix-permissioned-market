@@ -2,7 +2,7 @@
 
 airdrop_base() {
     cd ../spl-token-faucet
-    ANCHOR_WALLET=~/.config/solana/id.json ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 node ./setup/usdc_airdrop.js
+    ANCHOR_WALLET=~/.config/solana/id.json ANCHOR_PROVIDER_URL=https://api.devnet.solana.com node ./setup/usdc_airdrop.js
 }
 
 initialize_credix_program_market() {

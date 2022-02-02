@@ -53,7 +53,14 @@ async function init() {
   const liquidityPoolBaseTokenAccount =
     await utils.get_associated_token_address(baseMint, signingAuthorityPda);
 
-  /* await program.rpc.initializeMarket(
+  console.log("asfd", program.programId.toString());
+  console.log("asfd", globalMarketStatePda.toString());
+  console.log("asfd", signingAuthorityPda.toString());
+  console.log("asfd", liquidityPoolBaseTokenAccount.toString());
+  console.log("asfd", lpTokenMintKeypair.publicKey.toString());
+  console.log("asfd", baseMint.toString());
+
+  await program.rpc.initializeMarket(
     signingAuthorityBump,
     globalMarketStateBump,
     GLOBAL_MARKET_SEED,
@@ -61,7 +68,7 @@ async function init() {
       accounts: {
         owner: provider.wallet.publicKey,
         gatekeeperNetwork: new PublicKey(
-          "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs"
+          "tniC2HX5yg2yDjMQEcUo1bHa44x9YdZVSqyKox21SDz"
         ),
         globalMarketState: globalMarketStatePda,
         signingAuthority: signingAuthorityPda,
@@ -75,13 +82,15 @@ async function init() {
       },
       signers: [lpTokenMintKeypair],
     }
-  ); */
+  );
 
   // Create the signing PDA for credix-permissioned-market
-  /*   const [pda_address, bump] = await PublicKey.findProgramAddress(
+  const [pda_address, bump] = await PublicKey.findProgramAddress(
     [Buffer.from(anchor.utils.bytes.utf8.encode("signing-authority"))],
     permissionedMarketProgram.programId
   );
+  console.log("-=-------", pda_address.toString());
+  console.log("sdfsaf", permissionedMarketProgram.programId.toString());
   let tx = new Transaction();
   tx.add({
     keys: [
@@ -97,16 +106,20 @@ async function init() {
     data: Buffer.from([255, bump]),
     programId: permissionedMarketProgram.programId,
   });
-  await provider.send(tx); */
+  await provider.send(tx);
 
   const gm = await program.account.globalMarketState.fetch(
     globalMarketStatePda
   );
 
+  console.log("-------------");
+  // console.log("asfdsaf", gm.lpTokenMintAccount.toString());
+  console.log("asfdsaf", baseMint.toString());
+  console.log("asfdsaf", DEX_PID.toString());
   const [marketAPublicKey] = await listCredixMarket({
     connection: provider.connection,
     wallet: provider.wallet,
-    baseMint: gm.lpTokenMintAccount,
+    baseMint: lpTokenMintKeypair.publicKey,
     quoteMint: baseMint,
     baseLotSize: 10000,
     quoteLotSize: 10000,

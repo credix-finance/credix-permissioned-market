@@ -9,7 +9,7 @@ use crate::context::*;
 use anchor_lang::prelude::*;
 use state::*;
 
-declare_id!("D58Th9Y4tFssgZaCPQ6diJoiFC6TvcENsiYR6ZbRoosK");
+declare_id!("23LA3K8AW5JM9QyfF4xa27Q5qgkcLGi8tJgCi4dp4Xjc");
 
 pub const CREDIX_PASS_SEED: &str = "credix-pass";
 
@@ -19,7 +19,7 @@ pub mod gateway_program {
 }
 pub mod permissioned_market_program {
     use anchor_lang::prelude::declare_id;
-    declare_id!("B82qssUC4qJT3DXohg8A1k6TuUBNcjnf5d4KX8uJmhDK");
+    declare_id!("4HaBtighJFPCmLCzkaR8dhwQhSv7rynk3d2dbPPKtZgA");
 }
 
 #[program]
