@@ -1,10 +1,10 @@
 [programs.localnet]
-credix_permissioned_market = "FYXohVSAyeUykuBDGYpSohgZb4y6DFmNJBjcQrML8ix6"
-credix = "8HE5gUxtvXEpHFjaJW3SNcZe2vXEusKWcWJWoF8aJQ8"
+credix_permissioned_market = "GuPsqCV7H2bw35UFBHvmzNgK28qVe92U5vq7JJigjPUv"
+credix = "6i5vHpj1fVDqaWxknwH8mfCjkm2zZVwgDtfPMg19nzQK"
 
 [programs.devnet]
-credix_permissioned_market = "FYXohVSAyeUykuBDGYpSohgZb4y6DFmNJBjcQrML8ix6"
-credix = "8HE5gUxtvXEpHFjaJW3SNcZe2vXEusKWcWJWoF8aJQ8"
+credix_permissioned_market = "GuPsqCV7H2bw35UFBHvmzNgK28qVe92U5vq7JJigjPUv"
+credix = "6i5vHpj1fVDqaWxknwH8mfCjkm2zZVwgDtfPMg19nzQK"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -17,11 +17,11 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*"
 
 [[test.genesis]]
-address = "v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP"
+address = "6i5vHpj1fVDqaWxknwH8mfCjkm2zZVwgDtfPMg19nzQK"
 program = "./target/deploy/credix.so"
 
 [[test.genesis]]
-address = "iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq"
+address = "GuPsqCV7H2bw35UFBHvmzNgK28qVe92U5vq7JJigjPUv"
 program = "./target/deploy/credix_permissioned_market.so"
 
 [[test.genesis]]
@@ -33,5 +33,5 @@ address = "4sN8PnN2ki2W4TFXAfzR645FWs8nimmsYeNtxM8RBK6A"
 program = "./artifacts/spl_token_faucet.so"
 
 [[test.genesis]]
-address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+address = "A3KCE92wXZMtGGJT6XYL2KHva58VXvWkhcqfJ6Q5JEia"
 program = "./artifacts/serum_dex.so"

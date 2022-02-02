@@ -8,7 +8,7 @@ use serum_dex_permissioned::serum_dex::instruction::{
 };
 use serum_dex_permissioned::{Context, MarketMiddleware, MarketProxy, OpenOrdersPda, ReferralFees};
 
-declare_id!("FYXohVSAyeUykuBDGYpSohgZb4y6DFmNJBjcQrML8ix6");
+declare_id!("GuPsqCV7H2bw35UFBHvmzNgK28qVe92U5vq7JJigjPUv");
 
 #[program]
 pub mod credix_permissioned_market {
