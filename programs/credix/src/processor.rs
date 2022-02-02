@@ -22,6 +22,11 @@ pub fn process_initialize_market(
 }
 
 pub fn process_deposit(ctx: Context<DepositFunds>, amount: u64) -> ProgramResult {
+    civic_check(
+        &ctx.accounts.investor,
+        &ctx.accounts.gateway_token,
+        &ctx.accounts.global_market_state.gatekeeper_network,
+    )?;
     transfer_base(
         amount,
         &ctx.accounts.investor_token_account.to_account_info(),
