@@ -2,7 +2,6 @@ use crate::{Context, ErrorCode, MarketMiddleware};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program;
 use anchor_lang::solana_program::pubkey::Pubkey;
-use anchor_spl::dex;
 use serum_dex::instruction::*;
 
 /// MarketProxy provides an abstraction for implementing proxy programs to the
@@ -43,7 +42,7 @@ impl<'a> MarketProxy<'a> {
 
         // First account is the Serum DEX executable--used for CPI.
         let dex = &accounts[0];
-        require!(dex.key == &dex::ID, ErrorCode::InvalidTargetProgram);
+        // require!(dex.key == &dex::ID, ErrorCode::InvalidTargetProgram);
         let acc_infos = (&accounts[1..]).to_vec();
 
         // Process the instruction data.
@@ -171,14 +170,14 @@ impl<'a> MarketProxy<'a> {
             let ix = anchor_lang::solana_program::instruction::Instruction {
                 data: ix_data.to_vec(),
                 accounts: dex_accounts,
-                program_id: dex::ID,
+                program_id: dex.key(),
             };
             program::invoke_signed(&ix, &accounts, &signers)?;
         }
 
         // Reverse this to make the Feeze lp Tokens last instruction of program!
         post_instructions.reverse();
-        
+
         // Execute post instructions.
         for (ix, acc_infos, seeds) in post_instructions {
             let tmp_signers: Vec<Vec<&[u8]>> = seeds

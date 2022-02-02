@@ -33,23 +33,13 @@ async function init() {
   };
   const lpTokenMintKeypair = utils.lpTokenMint;
   const GLOBAL_MARKET_SEED = utils.GLOBAL_MARKET_SEED;
-  let baseMint;
+  let baseMintPK = new PublicKey(
+    "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
+  );
   let providerBaseAssociatedTokenPK;
   let lpTokenMint;
   let gatewayToken;
   await utils.aidrop_sol(utils.payer.publicKey);
-  baseMint = await utils.create_base_mint();
-
-  providerBaseAssociatedTokenPK = await baseMint.createAssociatedTokenAccount(
-    provider.wallet.publicKey
-  );
-
-  await utils.airdrop_mint(
-    baseMint,
-    utils.baseMintAuthority,
-    providerBaseAssociatedTokenPK,
-    1000_000_000
-  );
 
   // issue civic tokens
   await initialize_gatekeeper();
@@ -61,10 +51,7 @@ async function init() {
   const [signingAuthorityPda, signingAuthorityBump] =
     await utils.get_signing_authority_pda(globalMarketStatePda);
   const liquidityPoolBaseTokenAccount =
-    await utils.get_associated_token_address(
-      baseMint.publicKey,
-      signingAuthorityPda
-    );
+    await utils.get_associated_token_address(baseMintPK, signingAuthorityPda);
 
   await program.rpc.initializeMarket(
     signingAuthorityBump,
@@ -78,7 +65,7 @@ async function init() {
         signingAuthority: signingAuthorityPda,
         liquidityPoolTokenAccount: liquidityPoolBaseTokenAccount,
         lpTokenMintAccount: lpTokenMintKeypair.publicKey,
-        baseMintAccount: baseMint.publicKey,
+        baseMintAccount: baseMintPK,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -114,7 +101,7 @@ async function init() {
     connection: provider.connection,
     wallet: provider.wallet,
     baseMint: utils.lpTokenMint.publicKey,
-    quoteMint: baseMint.publicKey,
+    quoteMint: baseMintPK,
     baseLotSize: 10000,
     quoteLotSize: 10000,
     dexProgramId: DEX_PID,
@@ -123,6 +110,11 @@ async function init() {
   });
 
   console.log("Market Address : " + marketAPublicKey.toString());
+
+  const referral = new PublicKey(
+    "EoYuxcwTfyznBF2ebzZ8McqvveyxtMNTGAXGmNKycchB"
+  );
+  await utils.aidrop_sol(referral);
 }
 
 init();
