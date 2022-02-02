@@ -1,13 +1,13 @@
 [programs.localnet]
-credix_permissioned_market = "iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq"
-credix = "v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP"
+credix_permissioned_market = "B82qssUC4qJT3DXohg8A1k6TuUBNcjnf5d4KX8uJmhDK"
+credix = "D58Th9Y4tFssgZaCPQ6diJoiFC6TvcENsiYR6ZbRoosK"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/s.json"
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*"

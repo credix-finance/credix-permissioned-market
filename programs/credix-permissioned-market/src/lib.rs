@@ -8,10 +8,10 @@ use serum_dex_permissioned::serum_dex::instruction::{
 };
 use serum_dex_permissioned::{Context, MarketMiddleware, MarketProxy, OpenOrdersPda, ReferralFees};
 
-declare_id!("iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq");
+declare_id!("B82qssUC4qJT3DXohg8A1k6TuUBNcjnf5d4KX8uJmhDK");
 
 #[program]
-pub mod permissioned_markets {
+pub mod credix_permissioned_market {
 
     use super::*;
     pub fn entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

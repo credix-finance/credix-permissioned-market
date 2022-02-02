@@ -18,7 +18,7 @@ import { PermissionedMarkets } from "../target/types/permissioned_markets";
 import { listCredixMarket } from "../tests/permissioned-market-utils/market-lister";
 import { initialize_gatekeeper, issue_token } from "../tests/utils";
 
-const DEX_PID = new PublicKey("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
+const DEX_PID = new PublicKey("A3KCE92wXZMtGGJT6XYL2KHva58VXvWkhcqfJ6Q5JEia");
 
 async function init() {
   let provider = Provider.env();
@@ -33,52 +33,41 @@ async function init() {
   };
   const lpTokenMintKeypair = utils.lpTokenMint;
   const GLOBAL_MARKET_SEED = utils.GLOBAL_MARKET_SEED;
-  let baseMint;
+  const baseMint = new PublicKey(
+    "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
+  );
   let providerBaseAssociatedTokenPK;
   let lpTokenMint;
   let gatewayToken;
   await utils.aidrop_sol(utils.payer.publicKey);
-  baseMint = await utils.create_base_mint();
-
-  providerBaseAssociatedTokenPK = await baseMint.createAssociatedTokenAccount(
-    provider.wallet.publicKey
-  );
-
-  await utils.airdrop_mint(
-    baseMint,
-    utils.baseMintAuthority,
-    providerBaseAssociatedTokenPK,
-    1000_000_000
-  );
 
   // issue civic tokens
-  await initialize_gatekeeper();
-  await issue_token(provider.wallet.publicKey);
-  gatewayToken = await utils.get_gateway_token(provider.wallet.publicKey);
+  // await initialize_gatekeeper();
+  // await issue_token(provider.wallet.publicKey);
+  // gatewayToken = await utils.get_gateway_token(provider.wallet.publicKey);
 
   const [globalMarketStatePda, globalMarketStateBump] =
     await utils.get_global_market_state_pda(GLOBAL_MARKET_SEED);
   const [signingAuthorityPda, signingAuthorityBump] =
     await utils.get_signing_authority_pda(globalMarketStatePda);
   const liquidityPoolBaseTokenAccount =
-    await utils.get_associated_token_address(
-      baseMint.publicKey,
-      signingAuthorityPda
-    );
+    await utils.get_associated_token_address(baseMint, signingAuthorityPda);
 
-  await program.rpc.initializeMarket(
+  /* await program.rpc.initializeMarket(
     signingAuthorityBump,
     globalMarketStateBump,
     GLOBAL_MARKET_SEED,
     {
       accounts: {
         owner: provider.wallet.publicKey,
-        gatekeeperNetwork: utils.gatekeeperNetwork.publicKey,
+        gatekeeperNetwork: new PublicKey(
+          "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs"
+        ),
         globalMarketState: globalMarketStatePda,
         signingAuthority: signingAuthorityPda,
         liquidityPoolTokenAccount: liquidityPoolBaseTokenAccount,
         lpTokenMintAccount: lpTokenMintKeypair.publicKey,
-        baseMintAccount: baseMint.publicKey,
+        baseMintAccount: baseMint,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -86,10 +75,10 @@ async function init() {
       },
       signers: [lpTokenMintKeypair],
     }
-  );
+  ); */
 
   // Create the signing PDA for credix-permissioned-market
-  const [pda_address, bump] = await PublicKey.findProgramAddress(
+  /*   const [pda_address, bump] = await PublicKey.findProgramAddress(
     [Buffer.from(anchor.utils.bytes.utf8.encode("signing-authority"))],
     permissionedMarketProgram.programId
   );
@@ -108,13 +97,17 @@ async function init() {
     data: Buffer.from([255, bump]),
     programId: permissionedMarketProgram.programId,
   });
-  await provider.send(tx);
+  await provider.send(tx); */
+
+  const gm = await program.account.globalMarketState.fetch(
+    globalMarketStatePda
+  );
 
   const [marketAPublicKey] = await listCredixMarket({
     connection: provider.connection,
     wallet: provider.wallet,
-    baseMint: utils.lpTokenMint.publicKey,
-    quoteMint: baseMint.publicKey,
+    baseMint: gm.lpTokenMintAccount,
+    quoteMint: baseMint,
     baseLotSize: 10000,
     quoteLotSize: 10000,
     dexProgramId: DEX_PID,
