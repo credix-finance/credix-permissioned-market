@@ -39,6 +39,11 @@ pub mod permissioned_markets {
 /// 6. `[]` credix_pass
 /// 7. `[]` token_program
 /// 8. `[]` credix_program
+/// 9. `[]` associated token program
+/// 10. `[]` system program
+/// 11. `[]` rent sysvar
+/// 12. `[]` Gateway token
+/// ... Dex accounts
 #[derive(Default)]
 struct CredixPermissionedMarket {
     signing_authority_bump: u8,
