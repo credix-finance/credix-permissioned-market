@@ -18,7 +18,7 @@ let provider = anchor.Provider.env();
 anchor.setProvider(provider);
 // bug in 0.19.0
 // @ts-ignore
-const program = anchor.workspace.Credix;
+const program = anchor.workspace.Credix as Program<Credix>;;
 
 export const baseMintAuthority = anchor.web3.Keypair.generate();
 export const payer = anchor.web3.Keypair.generate();

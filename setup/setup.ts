@@ -18,7 +18,7 @@ import { PermissionedMarkets } from "../target/types/permissioned_markets";
 import { listCredixMarket } from "../tests/permissioned-market-utils/market-lister";
 import { initialize_gatekeeper, issue_token } from "../tests/utils";
 
-const DEX_PID = new PublicKey("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
+const DEX_PID = new PublicKey("A3KCE92wXZMtGGJT6XYL2KHva58VXvWkhcqfJ6Q5JEia");
 
 async function init() {
   let provider = Provider.env();
@@ -39,12 +39,12 @@ async function init() {
   let providerBaseAssociatedTokenPK;
   let lpTokenMint;
   let gatewayToken;
-  await utils.aidrop_sol(utils.payer.publicKey);
+  // await utils.aidrop_sol(utils.payer.publicKey);
 
   // issue civic tokens
-  await initialize_gatekeeper();
-  await issue_token(provider.wallet.publicKey);
-  gatewayToken = await utils.get_gateway_token(provider.wallet.publicKey);
+  // await initialize_gatekeeper();
+  // await issue_token(provider.wallet.publicKey);
+  // gatewayToken = await utils.get_gateway_token(provider.wallet.publicKey);
 
   const [globalMarketStatePda, globalMarketStateBump] =
     await utils.get_global_market_state_pda(GLOBAL_MARKET_SEED);
@@ -60,7 +60,9 @@ async function init() {
     {
       accounts: {
         owner: provider.wallet.publicKey,
-        gatekeeperNetwork: utils.gatekeeperNetwork.publicKey,
+        gatekeeperNetwork: new PublicKey(
+          "tniC2HX5yg2yDjMQEcUo1bHa44x9YdZVSqyKox21SDz"
+        ),
         globalMarketState: globalMarketStatePda,
         signingAuthority: signingAuthorityPda,
         liquidityPoolTokenAccount: liquidityPoolBaseTokenAccount,
@@ -111,10 +113,10 @@ async function init() {
 
   console.log("Market Address : " + marketAPublicKey.toString());
 
-  const referral = new PublicKey(
-    "EoYuxcwTfyznBF2ebzZ8McqvveyxtMNTGAXGmNKycchB"
-  );
-  await utils.aidrop_sol(referral);
+  // const referral = new PublicKey(
+  //   "EoYuxcwTfyznBF2ebzZ8McqvveyxtMNTGAXGmNKycchB"
+  // );
+  // await utils.aidrop_sol(referral);
 }
 
 init();

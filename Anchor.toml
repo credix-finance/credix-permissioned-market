@@ -1,12 +1,16 @@
 [programs.localnet]
-credix_permissioned_market = "iPRL869bGrTiJZP6GW2ysPYXV9PMKSMAr6CYhRJx3zq"
-credix = "v1yuc1NDc1N1YBWGFdbGjEDBXepcbDeHY1NphTCgkAP"
+credix_permissioned_market = "FYXohVSAyeUykuBDGYpSohgZb4y6DFmNJBjcQrML8ix6"
+credix = "8HE5gUxtvXEpHFjaJW3SNcZe2vXEusKWcWJWoF8aJQ8"
+
+[programs.devnet]
+credix_permissioned_market = "FYXohVSAyeUykuBDGYpSohgZb4y6DFmNJBjcQrML8ix6"
+credix = "8HE5gUxtvXEpHFjaJW3SNcZe2vXEusKWcWJWoF8aJQ8"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

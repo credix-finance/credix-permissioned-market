@@ -25,7 +25,7 @@ export async function listCredixMarket({
   proxyProgramId,
   feeRateBps,
 }) {
-  const market = MARKET_KP;
+  const market =new Account();
   const requestQueue = new Account();
   const eventQueue = new Account();
   const bids = new Account();

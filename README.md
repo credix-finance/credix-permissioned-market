@@ -42,7 +42,7 @@ ANCHOR_WALLET=~/.config/solana/s.json ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 
 # DEVNET
 You can find the program deployed on devnet here\
 SERUM DEX program : `A3KCE92wXZMtGGJT6XYL2KHva58VXvWkhcqfJ6Q5JEia`\
-Credix program : `D58Th9Y4tFssgZaCPQ6diJoiFC6TvcENsiYR6ZbRoosK`\
-Permissioned Market Program : `B82qssUC4qJT3DXohg8A1k6TuUBNcjnf5d4KX8uJmhDK`\
-Serum Market Public key: `Dosh9YzNfstN7jjdraf2RJCF25WZojUya79d2xzUJRp9`
+Credix program : `8HE5gUxtvXEpHFjaJW3SNcZe2vXEusKWcWJWoF8aJQ8`\
+Permissioned Market Program : `FYXohVSAyeUykuBDGYpSohgZb4y6DFmNJBjcQrML8ix6`\
+Serum Market Public key: `GpgNE1tn2d2wpMxGuYZdGYdEAqZwHi3U9yWjAe3hFdVV`
 
